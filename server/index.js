@@ -11,8 +11,6 @@ const io = new Server(httpServer, {
 });
 
 io.on('connection', (socket) => {
-  let addedUser = false;
-
   socket.on('new message', (message) => {
     socket.broadcast.emit('new message', {
       username: socket.username,
@@ -26,16 +24,6 @@ io.on('connection', (socket) => {
       username: socket.username,
     });
   });
-
-  // socket.on('disconnect', () => {
-  //   if (addedUser) {
-  //     --numUsers;
-
-  //     socket.broadcast.emit('user left', {
-  //       username: socket.username,
-  //     });
-  //   }
-  // });
 });
 
 httpServer.listen(8000);
