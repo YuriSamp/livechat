@@ -1,63 +1,46 @@
-import { SendHorizonal } from 'lucide-react'
 import { useEffect, useState } from 'react';
 import { socket } from './socket';
 import { DialogComponent } from './components/Dialog';
 import { v4 as uuidv4 } from 'uuid'
+import Chat from './components/Chat';
+import Title from './components/Title';
 
-
-type message = {
+export type message = {
   message: string
   userId: string
   time: string
 }
 
-function App() {
-  const date = new Date()
+type socketResponse = {
+  message: message
+  userName: string
+}
 
-  const [isConnected, setIsConnected] = useState(socket.connected);
+function App() {
   const [yourId, setYourId] = useState<string>('')
   const [messages, setMessages] = useState<message[]>([]);
   const [isUserSetted, setIsUserSetted] = useState(false)
+  const [otherPersonName, setOtherPersonName] = useState('')
   const [userName, setUserName] = useState('')
-  const [messageTosend, setMessageToSend] = useState('')
 
-
-  const onConnect = () => {
-    console.log('conectado')
-    setIsConnected(true);
+  const onNewMessage = (Response: socketResponse) => {
+    setMessages(prev => [...prev, Response.message])
   }
 
-  const onDiscoonect = () => {
-    console.log('desconectado')
-    setIsConnected(false);
-  }
-
-  const onNewMessage = (Response: any) => {
-    console.log(Response.message.data)
-    setMessages(prev => [...prev, Response.message.data])
+  const onNewUser = (user: { username: string }) => {
+    setOtherPersonName(user.username)
   }
 
   useEffect(() => {
     setYourId(uuidv4())
 
-    socket.on('connect', onConnect);
-    socket.on('disconnect', onDiscoonect);
     socket.on('new message', onNewMessage);
+    socket.on('user joined', onNewUser)
     return () => {
-      socket.off('connect', onConnect);
-      socket.off('disconnect', onDiscoonect);
       socket.off('new message', onNewMessage);
+      socket.off('user joined', onNewUser)
     };
   }, []);
-
-  const sendMessage = () => {
-    const time = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
-    setMessages(prev => [...prev, { message: messageTosend, userId: yourId, time }])
-    socket.emit('new message', { message: messageTosend, userId: yourId, time })
-    setMessageToSend('')
-  }
-
-  console.log(messages)
 
   return (
     <main className='flex flex-col justify-center items-center h-screen'>
@@ -65,32 +48,15 @@ function App() {
         isUserSetted={isUserSetted}
         setIsUserSetted={setIsUserSetted}
         setUserName={setUserName}
+        userName={userName}
       />
       <div className={`${!isUserSetted ? 'blur-md' : ''}`}>
-        <div className='flex flex-col items-center justify-center gap-1 py-5 '>
-          <h1 className='text-3xl'>You are chat with </h1>
-          <h2 className='text-2xl'>{userName}</h2>
-        </div>
-        <div className='w-[400px] h-[500px] border border-black rounded-md '>
-          <div className='h-[450px] py-2 px-5'>
-            <div className='h-full overflow-y-auto'>
-              {messages.map((message, i) => (
-                <div key={i} className='px-3'>
-                  <div className='w-fit border border-black my-2 px-2 gap-2 flex py-1  rounded-md max-w-[350px]'>
-                    <p className=' '>{message.message}</p>
-                    <p className='text-xs self-end'>{message.time}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className='flex justify-around px-2'>
-            <input className='w-[300px] border border-black rounded-lg p-2 max-h-52' onChange={(e) => setMessageToSend(e.target.value)} value={messageTosend} />
-            <button onClick={sendMessage}>
-              <SendHorizonal className='w-6 h-6' />
-            </button>
-          </div>
-        </div>
+        <Title otherPersonName={otherPersonName} />
+        <Chat
+          messages={messages}
+          setMessages={setMessages}
+          yourId={yourId}
+        />
       </div>
     </main>
   )

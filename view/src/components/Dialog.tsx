@@ -1,20 +1,21 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { Dispatch, SetStateAction } from 'react';
+import { socket } from '../socket';
 
 type Props = {
   isUserSetted: boolean
   setIsUserSetted: Dispatch<SetStateAction<boolean>>
+  userName: string
   setUserName: Dispatch<SetStateAction<string>>
 }
 
 
-export const DialogComponent = ({ isUserSetted, setIsUserSetted, setUserName }: Props) => {
+export const DialogComponent = ({ isUserSetted, setIsUserSetted, setUserName, userName }: Props) => {
 
-
-  const setUser = () => {
+  const sendUser = (userName: string) => {
+    socket.emit('add user', userName)
     setIsUserSetted(true)
   }
-
 
   return (
     <Dialog.Root open={!isUserSetted}>
@@ -40,7 +41,7 @@ export const DialogComponent = ({ isUserSetted, setIsUserSetted, setUserName }: 
           </fieldset>
           <div className="mt-[25px] flex justify-center">
             <Dialog.Close asChild>
-              <button className="bg-green4 text-green11 hover:bg-green5 focus:shadow-green7 inline-flex h-[35px] items-center justify-center rounded-[4px] px-[15px] font-medium leading-none focus:shadow-[0_0_0_2px] focus:outline-none" onClick={setUser}>
+              <button className="bg-green4 text-green11 hover:bg-green5 focus:shadow-green7 inline-flex h-[35px] items-center justify-center rounded-[4px] px-[15px] font-medium leading-none focus:shadow-[0_0_0_2px] focus:outline-none" onClick={() => sendUser(userName)}>
                 Enter the chat room
               </button>
             </Dialog.Close>
